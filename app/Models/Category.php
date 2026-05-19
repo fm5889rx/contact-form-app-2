@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Content;
+use App\Models\Contact;
 
 class Category extends Model
 {
@@ -19,10 +19,10 @@ class Category extends Model
     ];
 
     /**
-     * このカテゴリーに属するコンテンツを取得
+     * このタグを使用する複数のコンテンツを取得
      */
-    public function contents(): HasMany
+    public function contacts(): HasMany
     {
-        return $this->hasMany(Content::class);
+        return $this->HasMany(Contact::class);
     }
 }

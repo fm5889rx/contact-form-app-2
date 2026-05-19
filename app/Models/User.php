@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Content;
+use App\Models\Contact;
 
 class User extends Authenticatable
 {
@@ -46,10 +46,10 @@ class User extends Authenticatable
     ];
 
     /**
-     * このユーザーが所有するコンテンツを取得
+     * このユーザーが所有するお問い合わせ情報を取得
      */
-    public function contents(): HasMany
+    public function contacts(): HasMany
     {
-        return $this->hasMany(content::class);
+        return $this->hasMany(contact::class);
     }
 }
