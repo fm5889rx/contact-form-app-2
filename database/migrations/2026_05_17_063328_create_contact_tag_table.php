@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('contact_tag', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('tags_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('contact_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('tag_id')->constrained()->cascadeOnDelete();
+            $table->unique(['contact_id', 'tag_id']);
             $table->timestamps();
         });
     }

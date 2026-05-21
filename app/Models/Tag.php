@@ -21,8 +21,8 @@ class Tag extends Model
     /**
      * このタグを使用する複数のコンテンツを取得
      */
-    public function contents(): BelongsToMany
+    public function contacts(): BelongsToMany
     {
-        return $this->belongsToMany(Content::class);
+        return $this->belongsToMany(Contact::class);
     }
 }

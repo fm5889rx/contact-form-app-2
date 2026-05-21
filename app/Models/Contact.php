@@ -4,8 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Tag;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Tag;
+use App\Models\Category;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Contact extends Model
 {
@@ -27,7 +30,7 @@ class Contact extends Model
     ];
 
     /**
-     * このコンテンツに関係する複数のタグを取得
+     * 問い合わせ情報に関係する複数のタグのリレーション（多対多）
      */
     public function tags(): BelongsToMany
     {
@@ -35,15 +38,11 @@ class Contact extends Model
     }
 
     /**
-     * 性別コードから性別文字列を取得
+     * 問い合わせ情報に関連する複数のカテゴリーのリレーション（１対多）
      */
-    public function getGenderLabelAttribute(): string
+    public function category(): BelongsTo
     {
-        return match ($this->gender) {
-            1 => '男性',
-            2 => '女性',
-            3 => 'その他',
-        };
+        return $this->belongsTo(Category::class);
     }
 
 }
