@@ -18,11 +18,11 @@ class TagValidationTest extends TestCase
      */
     public function test_tag_validation(): void
     {
-        $user = User::factory()->create(); // ダミーのユーザーを作成
+        $user = User::factory()->create();          // ダミーのユーザーを作成
 
         $response = $this->actingAs($user)
             ->post('/admin/tags', [
-            'name' => '', // 空のタグ名
+            'name' => '',                           // 空のタグ名
         ]);
 
         $response->assertSessionHasErrors('name');  // バリデーションエラーが発生することを確認
@@ -36,20 +36,16 @@ class TagValidationTest extends TestCase
         /**
          * 既に存在するタグを作成してから、同じ名前のタグを作成しようとするテスト
          */
-        $category = Category::factory()->create();      // ダミーのカテゴリーを作成
-
-        $contact = Contact::factory()->create();        // ダミーのお問い合わせを作成
-
         $user = User::factory()->create();              // ダミーのユーザーを作成
 
-        Tag::factory()->create([
+        Tag::create([                        // タグを作成
             'name' => 'Duplicate Tag',
         ]);
 
-        $response = $this->actingAs($user)
-            ->post('/admin/tags', ['name' => 'Duplicate Tag']);   // 既に存在するタグ名でタグを作成しようとする
+        $response = $this->actingAs($user)              // 既に存在するタグ名でタグを作成しようとする
+            ->post('/admin/tags', ['name' => 'Duplicate Tag']);
 
-        $response->assertSessionHasErrors('name'); // バリデーションエラーが発生することを確認
+        $response->assertSessionHasErrors('name');      // バリデーションエラーが発生することを確認
     }
 
     /**

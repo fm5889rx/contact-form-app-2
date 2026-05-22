@@ -24,7 +24,10 @@ class ContactValidationTest extends TestCase
         parent::setUp();
 
         // カテゴリーのダミーデータを作成
-        $category = Category::factory()->create();
+        $category = Category::create([
+            'content' => 'カテゴリー1',
+        ]);
+
         // 正常値の準備
         $this->validData = [
             'category_id' => $category->id,

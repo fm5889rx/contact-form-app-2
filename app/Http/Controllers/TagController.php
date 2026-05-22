@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Tag;
 use App\Http\Requests\TagRequest;
 
@@ -27,6 +26,11 @@ class TagController extends Controller
     {
         // 指定されたidのレコードをテーブルから取り出す
         $tag = Tag::find($id);
+
+        // NULLチェック
+        if (!$tag) {
+            abort(404, '更新対象のレコードが存在しません');
+        }
 
         // タグ編集画面を呼び出す
         return view('admin.tags.edit', compact('tag'));

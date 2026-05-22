@@ -24,11 +24,12 @@ use App\Http\Controllers\TagController;
  */
 Route::get('/', [ContactController::class, 'index']);
 Route::post('/contacts/confirm', [ContactController::class, 'confirm']);
-Route::post('/contacts', [ContactController::class, 'thanks']);
+Route::post('/contacts', [ContactController::class, 'store']);
+Route::get('/thanks', [ContactController::class, 'thanks']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
-    Route::get('/admin/contacts/{contact}', [AdminController::class, 'show']);
+    Route::get('/admin/contacts/{contact}', [AdminController::class, 'show'])->name('admin.show');
     Route::delete('/admin/contacts/{contact}', [AdminController::class, 'destroy']);
 
     Route::post('/admin/tags', [TagController::class, 'store']);

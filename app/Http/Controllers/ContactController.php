@@ -35,13 +35,22 @@ class ContactController extends Controller
     }
 
     /**
-     * サンクスページ
+     * お問い合わせフォーム送信処理
      */
-    public function thanks(StoreContactRequest $request)
+    public function store(StoreContactRequest $request)
     {
         // Contactsテーブルに保存
         Contact::create($request->validated());
 
+        // サンクスページに移行
+        return redirect('/thanks');
+    }
+
+    /**
+     * サンクスページ
+     */
+    public function thanks()
+    {
         // サンクスページに移行
         return view('contact.thanks');
     }

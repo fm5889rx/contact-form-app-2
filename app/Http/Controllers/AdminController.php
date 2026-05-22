@@ -18,10 +18,9 @@ class AdminController extends Controller
         /**
          * 管理画面に表示する情報を取得
          */
-        // お問い合わせ情報を7件づつ取得
-        // $contacts = Contact::orderBy('id')->paginate(7);
         // カテゴリーテーブル情報を全件取得
         $categories = Category::all();
+
         // タグテーブル情報を全件取得
         $tags = Tag::all();
 
@@ -29,16 +28,23 @@ class AdminController extends Controller
          * 検索処理
          */
         $keyword = $request->query('keyword');  // クエリパラメータから検索キーワードを取得
+
         $gender = $request->query('gender');    // クエリパラメータから性別を取得
+
         $category_id = $request->query('category_id');  // クエリパラメータからカテゴリーIDを取得
+
         $date = $request->query('date');        // クエリパラメータから日付を取得
 
         $query = Contact::query();              // Contactモデルのクエリビルダを取得
 
         if (!empty($keyword)) {                 // キーワードが空でない場合
+
             if (Str::contains($keyword, ' ')) {  // キーワードにスペースが含まれている場合
+
                 $keywords = explode(' ', $keyword);  // スペースでキーワードを分割
+
                 foreach ($keywords as $word) {
+
                     $query->where(function ($q) use ($word) {               // クエリビルダに姓と名の両方の部分一致検索条件を追加
                         $q->where('first_name', 'like', '%'.$word.'%')
                           ->orWhere('last_name', 'like', '%'.$word.'%');
@@ -53,12 +59,15 @@ class AdminController extends Controller
                 }
             }
         }
+
         if ($gender) {
             $query->where('gender', $gender);               // クエリビルダに性別の完全一致検索条件を追加
         }
+
         if ($category_id) {
             $query->where('category_id', $category_id);     // クエリビルダにカテゴリーIDの完全一致検索条件を追加
         }
+
         if ($date) {
             $query->where('created_at', '>=', $date);       // クエリビルダに作成日時が指定日以降の検索条件を追加
         }
@@ -75,7 +84,7 @@ class AdminController extends Controller
      */
     public function show(string $id)
     {
-        $contact = Contact::find($id);
+        $contact = Contact::find($id);  // お問い合わせテーブルから対象レコードを取り出す
 
         // NULLチェック
         if (!$contact) {
