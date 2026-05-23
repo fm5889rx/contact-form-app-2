@@ -27,6 +27,7 @@ Route::get('/', [ContactController::class, 'index'])->name('contact.index');
 Route::post('/contacts/confirm', [ContactController::class, 'confirm']);
 Route::post('/contacts', [ContactController::class, 'store']);
 Route::get('/thanks', [ContactController::class, 'thanks']);
+Route::get('/contacts/export', [ContactController::class, 'export'])->name('contacts.export');
 
 Route::middleware('auth')->group(function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
