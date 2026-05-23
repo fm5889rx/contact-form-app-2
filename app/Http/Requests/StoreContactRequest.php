@@ -35,7 +35,7 @@ class StoreContactRequest extends FormRequest
     /**
      * バリデーションエラー時のメッセージ（日本語）
      */
-    public function massages(): array
+    public function messages(): array
     {
         return [
             'category_id.required' => 'カテゴリーを選択してください',
