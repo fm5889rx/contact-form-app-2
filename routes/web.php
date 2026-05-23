@@ -18,11 +18,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\AuthController;
 
 /**
  * ルーティング
  */
-Route::get('/', [ContactController::class, 'index']);
+Route::get('/', [ContactController::class, 'index'])->name('contact.index');
 Route::post('/contacts/confirm', [ContactController::class, 'confirm']);
 Route::post('/contacts', [ContactController::class, 'store']);
 Route::get('/thanks', [ContactController::class, 'thanks']);
@@ -37,3 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/admin/tags/{tag}', [TagController::class, 'update']);
     Route::delete('admin/tags/{tag}', [TagController::class, 'destroy']);
 });
+
+Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('guest');
+Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('/register', [AuthController::class, 'register'])->name('register')->middleware('guest');

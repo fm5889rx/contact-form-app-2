@@ -25,10 +25,11 @@ class ContactController extends Controller
      */
     public function confirm(StoreContactRequest $request)
     {
+dd($request);
         // 入力データのバリデーション結果を連想配列に保存（bladeへの値渡し用）
         $validated = $request->validated();
         // Caterogyテーブルから入力されているカテゴリーIDから１レコードを抽出
-        $category = Category::find($request->category_id);
+        $category = Category::findOrFail(($request->category_id));
 
         // Confirm画面に推移
         return view('contact.confirm', compact('validated', 'category'));
