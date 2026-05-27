@@ -73,6 +73,16 @@ sail up -d
 sail artisan key:generate
 ```
 
+- データベースの初期構築
+```
+sail artisan migrate:fresh
+```
+```
+sail artisan db:seed
+```
+
+- 開発サーバのインストール
+```
 
 
 - リポジトリの新規作成
