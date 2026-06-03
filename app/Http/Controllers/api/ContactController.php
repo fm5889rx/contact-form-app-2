@@ -67,7 +67,7 @@ class ContactController extends Controller
 
         return new ContactResource($contact)
             ->response()
-            ->setStatusCode(Response::HTTP_UPDATED);
+            ->setStatusCode(Response::HTTP_NO_CONTENT);
     }
 
     /**
@@ -83,6 +83,6 @@ class ContactController extends Controller
 
         $contact->delete($id);
 
-        return response()->json(null, 204);
+        return response()->json(null, HTTP_NO_CONTENT);
     }
 }
