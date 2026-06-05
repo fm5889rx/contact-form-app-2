@@ -29,6 +29,8 @@ class StoreContactRequest extends FormRequest
             'address' => 'required|string|max:255',
             'building' => 'nullable|string|max:255',
             'detail' => 'required|string|max:120',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'integer|exists:tags,id',
         ];
     }
 
@@ -55,6 +57,9 @@ class StoreContactRequest extends FormRequest
             'building.max' => '建物名は255文字以内で入力してください',
             'detail.required' => 'お問い合わせ内容を入力してください',
             'detail.max' => 'お問い合わせ内容は120文字以内で入力してください',
+            'tag_ids.array' => 'タグIDは配列で入力してください',
+            'tag_ids.*.integer' => 'タグIDは整数で入力してください',
+            'tag_ids.*.exists' => '指定されたタグIDは存在しません',
         ];
     }
 }

@@ -25,6 +25,11 @@ class ContactResource extends JsonResource
             'tel' => $this->tel,
             'address' => $this->address,
             'building' => $this->building,
+            'tag_ids' => [
+                'contact_id' => $this->id,
+                'id' => $this->tags->pluck('id')->toArray(),
+                'name' => $this->tags->pluck('name')->toArray(),
+            ],
             'detail' => $this->detail,
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),

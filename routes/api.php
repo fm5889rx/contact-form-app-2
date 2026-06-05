@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\api\ContactController;
+use App\Http\Controllers\Api\ContactController;
 use Illuminate\Support\Facades\Route;
 
 /*
