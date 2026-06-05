@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Contact;
+use App\Models\Tag;
 use App\Http\Requests\StoreContactRequest;
 use Illuminate\Http\Request;
 
@@ -17,8 +18,11 @@ class ContactController extends Controller
         // Categoriesテーブルを全件読み込む
         $categories = Category::all();
 
+        // tagsテーブルを全件読み込む
+        $tags = Tag::all();
+
         // 入力フォームにカテゴリー情報を渡してページ表示
-        return view('contact.index', compact('categories'));
+        return view('contact.index', compact('categories', 'tags'));
     }
 
     /**
@@ -28,11 +32,17 @@ class ContactController extends Controller
     {
         // 入力データのバリデーション結果を連想配列に保存（bladeへの値渡し用）
         $validated = $request->validated();
+
         // Caterogyテーブルから入力されているカテゴリーIDから１レコードを抽出
         $category = Category::findOrFail(($request->category_id));
 
+        // タグIDの配列を取得
+        $tagIds = $request->input('tag_ids', []);  // 'tags'はフォームのタグ入力のname属性に合わせる
+        // タグIDの配列からTagモデルのレコードを取得
+        $tags = Tag::whereIn('id', $tagIds)->get();
+
         // Confirm画面に推移
-        return view('contact.confirm', compact('validated', 'category'));
+        return view('contact.confirm', compact('validated', 'category', 'tags'));
     }
 
     /**
@@ -40,8 +50,14 @@ class ContactController extends Controller
      */
     public function store(StoreContactRequest $request)
     {
+        // 入力データのバリデーション結果を連想配列に保存（タグの保存のため）
+        $validated = $request->validated();
+
         // Contactsテーブルに保存
-        Contact::create($request->validated());
+        $contact = Contact::create($validated);
+
+        // syncメソッドでタグIDの配列を保存（既存のタグとの関連も更新される）
+        $contact->tags()->sync($validated['tag_ids'] ?? []);
 
         // サンクスページに移行
         return redirect('/thanks');
@@ -68,37 +84,58 @@ class ContactController extends Controller
             // 1. クエリビルダーを用意
             $query = Contact::query();
 
-            // 2. 各検索項目が入力されている場合だけwhere句を付与
-            if ($request->filled('name')) {                     // 氏名（部分一致）
-                $query->where('name', 'like', '%' . $request->name . '%');
+            // 氏名（部分一致）とメールアドレス（完全一致）にkeywordを使用するため、
+            // keywordの存在をチェックしてからクエリに条件を追加
+            $query->when($request->filled('keyword'), function ($q, $keyword) {
+                // ① 文字列を空白で分割（「田中 太郎」→ ['田中','太郎']）
+                $words = preg_split('/\s+/', trim($keyword));
+
+                // ② すべての単語を「氏名」カラムで検索
+                // ③ かつ「電子メール」も検索対象に追加（OR 条件）
+                $q->where(function ($q2) use ($words) {
+                    foreach ($words as $w) {
+                        // 氏名（first_name, last_name）→ 部分一致
+                        $q2->where(function ($q3) use ($w) {
+                            $q3->orWhere('first_name', 'like', "%{$w}%")
+                                ->orWhere('last_name',  'like', "%{$w}%");
+                        });
+                    }
+                    // メールアドレスは完全一致（※メールの検索はキーワードと別入力の場合は下記 `email` で
+                    // → 同じキーワードで検索したい場合はここに入れる）
+                    $q2->orWhere('email', $keywords);
+                });
+            });
+
+
+            if ($request->gender) {
+                if ($request->filled('gender')) {                   // 性別
+                    $query->where('gender', $request->gender);
+                }
             }
 
-            if ($request->filled('email')) {                    // メールアドレス（完全一致）
-                $query->where('email', $request->email);
-            }
-
-            if ($request->filled('gender')) {                   // 性別
-                $query->where('gender', $request->gender);
+            if ($request->filled('tel')) {                      // 電話番号（完全一致）
+                $query->where('tel', $request->tel);
             }
 
             if ($request->filled('category_id')) {              // カテゴリID
-                $query->where('category_id', $request->category);
+                $query->where('category_id', $request->category_id);
             }
 
             // 5. 日時（例：created_at が 2024-05-01 から 2024-05-31 まで）
-            if ($request->filled('date_from') && $request->filled('date_to')) {
+            if ($request->filled('date')) {
                 $query->whereBetween('created_at', [
-                    $request->date_from . ' 00:00:00',
-                    $request->date_to   . ' 23:59:59',
+                    $request->date . ' 00:00:00',
+                    $request->date. ' 23:59:59',
                 ]);
             }
 
             // 3. ソートと取得
             $contacts = $query
-                ->orderBy('id', 'asc')   // id順に昇順で取得
+                ->orderBy('created_at', 'desc')   // 作成日時順に降順で取得
                 ->get();
         }
-
+dump($query->toSql());  // クエリの内容を確認するためのダンプ
+dd($contacts);
         // ダウンロードするファイル名
         $timestamp = now()->format('Ymd_His');
         $fileName = "お問い合わせ一覧_{$timestamp}.csv";
@@ -116,20 +153,6 @@ class ContactController extends Controller
 
             // BOM を先頭に書き込む
             fputs($output, "\xEF\xBB\xBF");
-
-            // ヘッダー行のカラム構成
-            $columnHeaders = [
-                'id',               // ID
-                'name',             // 氏名
-                'gender',           // 性別
-                'email',            // メール
-                'tel',              // 電話番号
-                'address',          // 住所
-                'building',         // 建物名
-                'category_id',      // カテゴリ
-                'detail',           // 内容
-                'created_at',       // 作成日時
-            ];
 
             fputcsv($output, [   // CSVヘッダー行を出力
                     'ID',
@@ -153,12 +176,16 @@ class ContactController extends Controller
 
             // 1 行ずつ CSV へ書き込む
             foreach ($contacts as $contact) {
+                // 氏名を結合
+                $contact->name = $contact->last_name . ' ' . $contact->first_name;
+
                 // 性別を文字列化
                 $genderText = $genderMap[$contact->gender] ?? '';
 
                 // カテゴリ名（存在しない場合は空文字）
                 $categoryText = $contact->category ? $contact->category->content : '';
 
+                // CSV行を出力
                 fputcsv($output, [
                     $contact->id,
                     $contact->name,
