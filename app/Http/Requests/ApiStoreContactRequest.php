@@ -31,7 +31,7 @@ class ApiStoreContactRequest extends FormRequest
             'building' => 'nullable|string|max:255',
             'category_id' => 'integer|exists:categories,id',
             'detail' => 'string|max:120',
-            'tag_ids' => 'nullable|array|integer|exists:tags,id',
+            'tag_ids' => 'nullable|array|exists:tags,id',
             'tag_ids.*' => 'integer|exists:tags,id',
         ];
     }
@@ -58,9 +58,7 @@ class ApiStoreContactRequest extends FormRequest
             'detail.string' => '内容は文字列で入力してください',
             'detail.max' => '内容は120文字以内で入力してください',
             'tag_ids.array' => 'タグIDは配列で入力してください',
-            'tag_ids.integer' => 'タグIDは整数で入力してください',
             'tag_ids.exists' => '指定されたタグIDは存在しません',
-            'tag_ids.*.integer' => 'タグIDは整数で入力してください',
             'tag_ids.*.exists' => '指定されたタグIDは存在しません',
         ];
     }
