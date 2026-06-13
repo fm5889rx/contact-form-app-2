@@ -47,7 +47,7 @@ class AdminController extends Controller
 
                     $query->where(function ($q) use ($word) {               // クエリビルダに姓と名の両方の部分一致検索条件を追加
                         $q->where('first_name', 'like', '%'.$word.'%')
-                          ->orWhere('last_name', 'like', '%'.$word.'%');
+                            ->orWhere('last_name', 'like', '%'.$word.'%');
                     });
                 }
             } else {                            // キーワードにスペースが含まれていない場合
@@ -84,15 +84,11 @@ class AdminController extends Controller
      */
     public function show(string $id)
     {
-        $contact = Contact::find($id);  // お問い合わせテーブルから対象レコードを取り出す
-
-        // NULLチェック
-        if (!$contact) {
-            abort(404, '該当情報のレコードが見つかりません');
-        }
+        $contact = Contact::findOrFail($id);  // お問い合わせテーブルからレコードを取り出す
+                                              // レコードが無ければ404エラーで処理
 
         // お問い合わせ詳細画面に推移
-        return view('admin.show', compact('contact'));
+        return view('admin.show', compact('contact'));  // 詳細画面に推移
     }
 
     /**
