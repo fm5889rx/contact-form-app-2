@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
 class CategoryModelTest extends TestCase
@@ -62,7 +63,7 @@ class CategoryModelTest extends TestCase
         ]);
 
         // カテゴリーの属性とバリデーションルールを使用してバリデーションデータを作成
-        $validator = \Validator::make($category->toArray(), Category::$rules);
+        $validator = Validator::make($category->toArray(), Category::$rules);
 
         // バリデーションエラーが発生することを確認
         $this->assertTrue($validator->fails(), 'カテゴリーの名前が空の場合はバリデーションエラーが発生します。');
@@ -79,7 +80,7 @@ class CategoryModelTest extends TestCase
         ]);
 
         // カテゴリーの属性とバリデーションルールを使用してバリデーションデータを作成
-        $validator = \Validator::make($category->toArray(), Category::$rules);
+        $validator = Validator::make($category->toArray(), Category::$rules);
 
         // バリデーションエラーが発生することを確認
         $this->assertTrue($validator->fails(), 'カテゴリーの名前が255文字を超える場合はバリデーションエラーが発生します。');
@@ -96,7 +97,7 @@ class CategoryModelTest extends TestCase
         ]);
 
         // カテゴリーの属性とバリデーションルールを使用してバリデーションデータを作成
-        $validator = \Validator::make($category->toArray(), Category::$rules);
+        $validator = Validator::make($category->toArray(), Category::$rules);
 
         // バリデーションエラーが発生しないことを確認
         $this->assertFalse($validator->fails(), 'カテゴリーの名前が255文字以下の場合はバリデーションエラーが発生しません。');
@@ -118,7 +119,7 @@ class CategoryModelTest extends TestCase
         ]);
 
         // カテゴリーの属性とバリデーションルールを使用してバリデーションデータを作成
-        $validator = \Validator::make($category->toArray(), Category::$rules);
+        $validator = Validator::make($category->toArray(), Category::$rules);
 
         // バリデーションエラーが発生することを確認
         $this->assertTrue($validator->fails(), 'カテゴリーの名前が重複する場合はバリデーションエラーが発生します。');
@@ -135,7 +136,7 @@ class CategoryModelTest extends TestCase
         ]);
 
         // カテゴリーの属性とバリデーションルールを使用してバリデーションデータを作成
-        $validator = \Validator::make($category->toArray(), Category::$rules);
+        $validator = Validator::make($category->toArray(), Category::$rules);
 
         // バリデーションエラーが発生しないことを確認
         $this->assertFalse($validator->fails(), 'カテゴリーの名前が空でない場合はバリデーションエラーが発生しません。');

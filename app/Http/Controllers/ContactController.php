@@ -28,6 +28,16 @@ class ContactController extends Controller
     /**
      * お問い合わせフォーム確認ページ
      */
+    // GET /contacts/confirmをリダイレクトするためのワンクッション
+    public function confirmView()
+    {
+        return view('contact.confirm', [
+            'validated' => session('validated'),
+            'category'  => session('category'),
+            'tags'      => session('tags'),
+        ]);
+    }
+    // POSTメッセージ処理
     public function confirm(StoreContactRequest $request)
     {
         // 入力データのバリデーション結果を連想配列に保存（bladeへの値渡し用）
@@ -42,7 +52,12 @@ class ContactController extends Controller
         $tags = Tag::whereIn('id', $tagIds)->get();
 
         // Confirm画面に推移
-        return view('contact.confirm', compact('validated', 'category', 'tags'));
+        return redirect()->route('contacts.confirm')
+                ->with([
+                    'validated' => $validated,
+                    'category'  => $category,
+                    'tags'      => $tags,
+                ]);
     }
 
     /**

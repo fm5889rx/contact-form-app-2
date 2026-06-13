@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class TagFormTest extends TestCase
+class TagControllerTest extends TestCase
 {
     use RefreshDatabase;    // データベースをリフレッシュするトレイト
 
@@ -25,7 +26,8 @@ class TagFormTest extends TestCase
         ]);
 
         // HTTPステータスコード302を期待（リダイレクト）
-        $response->assertStatus(302);
+        $response->assertStatus(302)                // 画面更新
+                ->assertRedirect('/');              // リダイレクト先（管理画面）
     }
 
     /**
@@ -35,7 +37,8 @@ class TagFormTest extends TestCase
     {
         // タグを保存する処理を実行
         $response = $this->post('/admin/tags', [
-            'name' => 'タグ1',
+            'id'    => 1,
+            'name'  => 'タグ1',
         ]);
 
         // HTTPステータスコード302を期待（リダイレクト）
@@ -58,15 +61,15 @@ class TagFormTest extends TestCase
         $this->actingAs($admin);                // 管理者ユーザーで認証
 
         // タグを保存する処理を実行
-        $response = $this->post('/admin/tags', [
-            'name' => 'タグ1',
-        ]);
+        $tag = Tag::factory()->create();
 
         // タグ編集画面に推移する処理を実行
-        $response = $this->get('/admin/tags/1/edit');  // タグ編集ページのURLにGETリクエストを送信
+        $response = $this->get("/admin/tags/{$tag->id}/edit");  // タグ編集ページのURLにGETリクエストを送信
 
-        // HTTPステータスコード404を期待（リダイレクトしない）
-        $response->assertStatus(404);
+        
+        $response->assertStatus(200)            // HTTPステータスコード200を期待
+                ->assertViewIs('admin.tags.edit')  // タグ演習画面に移行
+                ->assertViewHas('tag', $tag);   // 編集大書のタグ情報を渡しているか
     }
 
     /**
@@ -94,15 +97,16 @@ class TagFormTest extends TestCase
         $this->actingAs($admin);                // 管理者ユーザーで認証
 
         // タグを保存する処理を実行
-        $response = $this->post('/admin/tags', [
-            'name' => 'タグ1',
-        ]);
+        $tag = Tag::factory()->create();
 
         // タグ削除処理を実行
-        $response = $this->delete('/admin/tags/1');  // タグ削除ページのURLにDELETEリクエストを送信
+        $response = $this->delete("/admin/tags/{$tag->id}");  // タグ削除ページのURLにDELETEリクエストを送信
 
-        // HTTPステータスコード404を期待（リダイレクトされない）
-        $response->assertStatus(404);
+        $response->assertStatus(302);            // HTTPステータスコード302を期待
+
+        $this->assertDatabaseMissing('tags', [   // レコードが削除されている事を確認
+            'id' => $tag->id,
+        ]);
     }
 
     /**

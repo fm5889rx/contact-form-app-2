@@ -23,9 +23,10 @@ use App\Http\Controllers\AuthController;
 /**
  * ルーティング
  */
-Route::get('/', [ContactController::class, 'index'])->name('contact.index');
-Route::post('/contacts/confirm', [ContactController::class, 'confirm']);
-Route::post('/contacts', [ContactController::class, 'store']);
+Route::get('/', [ContactController::class, 'index'])->name('contacts.index');
+Route::get('/contacts/confirm', [ContactController::class, 'confirmView'])->name('contacts.confirm');
+Route::post('/contacts/confirm', [ContactController::class, 'confirm'])->name('contacts.confirm.submit');
+Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
 Route::get('/thanks', [ContactController::class, 'thanks']);
 Route::get('/contacts/export', [ContactController::class, 'export'])->name('contacts.export');
 
@@ -35,7 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/contacts/{contact}', [AdminController::class, 'destroy']);
 
     Route::post('/admin/tags', [TagController::class, 'store']);
-    Route::get('/admin/tags/{tag}/edit', [TagController::class, 'edit']);
+    Route::get('/admin/tags/{tag}/edit', [TagController::class, 'edit'])->name('admin.tags.edit');
     Route::put('/admin/tags/{tag}', [TagController::class, 'update']);
     Route::delete('admin/tags/{tag}', [TagController::class, 'destroy']);
 });
