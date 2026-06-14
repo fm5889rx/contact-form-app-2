@@ -7,6 +7,7 @@ use App\Models\Contact;
 use App\Models\Tag;
 use App\Http\Requests\StoreContactRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ContactController extends Controller
 {
@@ -96,61 +97,64 @@ class ContactController extends Controller
             // 全件取得＆並び替え
             $contacts = Contact::orderBy('created_at', 'desc')->get();
         } else {                        // 検索条件の指定があるなら
-            // 1. クエリビルダーを用意
-            $query = Contact::query();
+            // カテゴリーテーブル情報を全件取得
+            $categories = Category::all();
 
-            // 氏名（部分一致）とメールアドレス（完全一致）にkeywordを使用するため、
-            // keywordの存在をチェックしてからクエリに条件を追加
-            $query->when($request->filled('keyword'), function ($q, $keyword) {
-                // ① 文字列を空白で分割（「田中 太郎」→ ['田中','太郎']）
-                $words = preg_split('/\s+/', trim($keyword));
+            // タグテーブル情報を全件取得
+            $tags = Tag::all();
 
-                // ② すべての単語を「氏名」カラムで検索
-                // ③ かつ「電子メール」も検索対象に追加（OR 条件）
-                $q->where(function ($q2) use ($words) {
-                    foreach ($words as $w) {
-                        // 氏名（first_name, last_name）→ 部分一致
-                        $q2->where(function ($q3) use ($w) {
-                            $q3->orWhere('first_name', 'like', "%{$w}%")
-                                ->orWhere('last_name',  'like', "%{$w}%");
+            /**
+             * 検索処理
+             */
+            $keyword = $request->query('keyword');  // クエリパラメータから検索キーワードを取得
+
+            $gender = $request->query('gender');    // クエリパラメータから性別を取得
+
+            $category_id = $request->query('category_id');  // クエリパラメータからカテゴリーIDを取得
+
+            $date = $request->query('date');        // クエリパラメータから日付を取得
+
+            $query = Contact::query();              // Contactモデルのクエリビルダを取得
+
+            if (!empty($keyword)) {                 // キーワードが空でない場合
+
+                if (Str::contains($keyword, ' ')) {  // キーワードにスペースが含まれている場合
+
+                    $keywords = explode(' ', $keyword);  // スペースでキーワードを分割
+
+                    foreach ($keywords as $word) {
+
+                        $query->where(function ($q) use ($word) {               // クエリビルダに姓と名の両方の部分一致検索条件を追加
+                            $q->where('first_name', 'like', '%' . $word . '%')
+                                ->orWhere('last_name', 'like', '%' . $word . '%');
                         });
                     }
-                    // メールアドレスは完全一致（※メールの検索はキーワードと別入力の場合は下記 `email` で
-                    // → 同じキーワードで検索したい場合はここに入れる）
-                    $q2->orWhere('email', $keywords);
-                });
-            });
-
-
-            if ($request->gender) {
-                if ($request->filled('gender')) {                   // 性別
-                    $query->where('gender', $request->gender);
+                } else {                            // キーワードにスペースが含まれていない場合
+                    if (filter_var($keyword, FILTER_VALIDATE_EMAIL)) {    // キーワードがメールアドレスの形式の場合
+                        $query->where('email', 'like', '%' . $keyword . '%');       // クエリビルダにメールアドレスの部分一致検索条件を追加
+                    } else {
+                        $query->where('first_name', 'like', '%' . $keyword . '%')   // クエリビルダに名の部分一致検索条件を追加
+                            ->orWhere('last_name', 'like', '%' . $keyword . '%'); // クエリビルダに姓の部分一致検索条件を追加
+                    }
                 }
             }
 
-            if ($request->filled('tel')) {                      // 電話番号（完全一致）
-                $query->where('tel', $request->tel);
+            if ($gender) {
+                $query->where('gender', $gender);               // クエリビルダに性別の完全一致検索条件を追加
             }
 
-            if ($request->filled('category_id')) {              // カテゴリID
-                $query->where('category_id', $request->category_id);
+            if ($category_id) {
+                $query->where('category_id', $category_id);     // クエリビルダにカテゴリーIDの完全一致検索条件を追加
             }
 
-            // 5. 日時（例：created_at が 2024-05-01 から 2024-05-31 まで）
-            if ($request->filled('date')) {
-                $query->whereBetween('created_at', [
-                    $request->date . ' 00:00:00',
-                    $request->date. ' 23:59:59',
-                ]);
+            if ($date) {
+                $query->where('created_at', '>=', $date);       // クエリビルダに作成日時が指定日以降の検索条件を追加
             }
 
-            // 3. ソートと取得
-            $contacts = $query
-                ->orderBy('created_at', 'desc')   // 作成日時順に降順で取得
-                ->get();
+            // クエリビルダを実行してお問い合わせ情報を7件づつ取得
+            $contacts = $query->with(['category', 'tags'])->paginate(7);
         }
-dump($query->toSql());  // クエリの内容を確認するためのダンプ
-dd($contacts);
+
         // ダウンロードするファイル名
         $timestamp = now()->format('Ymd_His');
         $fileName = "お問い合わせ一覧_{$timestamp}.csv";

@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ContactControllerTest extends TestCase
@@ -14,7 +15,6 @@ class ContactControllerTest extends TestCase
 
     protected $categoryId;              // category_idを保持しておく変数
     protected $tagId;                   // tag_idを保持しておく変数
-    protected $contactId;               // contact_idを保持しておく変数
 
     public function setUp(): void
     {
@@ -31,11 +31,6 @@ class ContactControllerTest extends TestCase
             'id'        => 1,
         ]); 
         $this->tagId = $tag->id;            // tag_idを保持
-
-        $contact = Contact::factory()->create([     // テスト用のcontactテーブルを作成
-            'category_id' => $this->categoryId,
-        ]);
-        $this->contactId = $contact->id;            // contact_idを保持
     }
     /**
      * お問い合わせフォームの表示テスト
@@ -550,5 +545,78 @@ class ContactControllerTest extends TestCase
 
         // セッションにエラーメッセージが存在することを期待
         $response->assertSessionHasErrors(['detail']);
+    }
+
+    /**
+     * CSVエクスポートのテスト
+     */
+    // 全件出力（検索条件なし）
+    public function test_csv_export_all()
+    {   
+        // データの準備
+        $contacts = Contact::factory()->count(10)->create([  // データを10件作成
+            'category_id' => $this->categoryId,
+        ]);
+
+        $response = $this->get('/contacts/export');     // クエリパラメータなしでGET
+
+        $response->assertStatus(200);               // HTTPステータスが200OKを期待    
+
+        $response->assertHeader(                        // CSVヘッダーを確認
+            'Content-Type', 'text/csv; charset=UTF-8');
+
+        // ファイルの内容確認
+        ob_start();                                     // 出力バッファを開く
+
+        $response->send();                          // ストリームから文字列を取り出す準備
+
+        $csvContent = ob_get_clean();                   // ストリームから文字列を取得
+
+        $lines = explode("\n", $csvContent);            // 各行に分割
+
+        $this->assertEquals(12, count($lines));         // ヘッダー＋10行＋EOF行かを確認
+
+        $lineCount = 0;                                 // 行カウンタをリセット
+        foreach ($lines as $line) {                     // 各行を検証
+            if ($lineCount == 0) {                      // ヘッダー行か？
+                $this->assertEquals($line,              // ヘッダ行の内容を比較
+                    "\u{FEFF}ID,氏名,性別,メール,電話番号,住所,建物名,カテゴリ,内容,作成日時"
+                );
+            } elseif ($lineCount == 11) {               // 最終行か？
+                $this->assertEquals($line, "");         // EOFは空文字なのでそれと比較
+            } else {                                    // その他（データ行）
+                // 対象レコードを取得
+                $contact = Contact::with('category')->find($lineCount+96);
+//dump($contacts);
+                // 既存の場所 (id 等）を除外して取りたい順で配列を作る
+                $values = [
+                    $contact->id,
+                    $contact->last_name . ' ' . $contact->first_name,
+                    // gender を文字列に変換
+                    match ($contact->gender) {
+                        1 => '男性',
+                        2 => '女性',
+                        3 => 'その他',
+                    },
+                    $contact->email,
+                    $contact->tel,
+                    $contact->address,
+                    $contact->building ?? '',
+                    $contact->category->content ?? '', // category_id をカテゴリ名に置換
+                    $contact->detail,
+                    $contact->created_at,
+                ];
+
+                $stream = fopen('php://temp', 'r+');    // 文字列に書き込む一時的なメモリストリーム
+                fputcsv($stream, $values);              // CSV形式で書き出し
+                rewind($stream);                        // 先頭に巻き戻し
+                $csv = fgets($stream);                  // 1行だけ読み出し
+                fclose($stream);                        // ストリームをクローズ
+                $csvLine = rtrim($csv, "\n");           // 行末端の改行文字を削除
+//dump($values, $csv, $csvLine, $line);
+                $this->assertEquals($csvLine, $line);   // レコードとCSV文字列を比較
+            }
+            $lineCount++;                               // 行カウンタを更新
+        }
     }
 }

@@ -97,12 +97,7 @@ class AdminController extends Controller
     public function destroy(string $id)
     {
         // 削除対象レコードをテーブルから取り出す
-        $contact = Contact::find($id);
-
-        // NULLチェック
-        if (!$contact) {
-            abort(404, '削除対象のレコードが存在しません');
-        }
+        $contact = Contact::findOrFail($id);
 
         // レコードを削除
         $contact->delete();
